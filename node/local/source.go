@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 
-	db "github.com/cometbft/cometbft-db"
+	db "github.com/tendermint/tm-db"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
