@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 
+	db "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -19,7 +20,6 @@ import (
 	tmnode "github.com/tendermint/tendermint/node"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmstore "github.com/tendermint/tendermint/store"
-	db "github.com/tendermint/tm-db"
 
 	"github.com/forbole/juno/v4/node"
 )
