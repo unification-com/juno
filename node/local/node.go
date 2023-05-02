@@ -41,7 +41,7 @@ import (
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmnode "github.com/tendermint/tendermint/node"
 	tmctypes "github.com/tendermint/tendermint/rpc/core/types"
-	dbm "github.com/cometbft/cometbft-db"
+	dbm "github.com/tendermint/tm-db"
 )
 
 const (
