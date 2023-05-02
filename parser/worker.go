@@ -120,17 +120,17 @@ func (w Worker) Process(height int64) error {
 		return fmt.Errorf("failed to get block results from node: %s", err)
 	}
 
-	txs, err := w.node.Txs(block)
-	if err != nil {
-		return fmt.Errorf("failed to get transactions for block: %s", err)
-	}
+	// txs, err := w.node.Txs(block)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to get transactions for block: %s", err)
+	// }
 
 	vals, err := w.node.Validators(height)
 	if err != nil {
 		return fmt.Errorf("failed to get validators for block: %s", err)
 	}
 
-	return w.ExportBlock(block, events, txs, vals)
+	return w.ExportBlock(block, events, []*types.Tx{}, vals)
 }
 
 // ProcessTransactions fetches transactions for a given height and stores them into the database.
