@@ -227,14 +227,12 @@ func (cp *Node) Tx(hash string) (*types.Tx, error) {
 
 // Txs implements node.Node
 func (cp *Node) Txs(block *tmctypes.ResultBlock) ([]*types.Tx, error) {
-	txResponses := make([]*types.Tx, len(block.Block.Txs))
-	for i, tmTx := range block.Block.Txs {
+	var txResponses []*types.Tx
+	for _, tmTx := range block.Block.Txs {
 		txResponse, err := cp.Tx(fmt.Sprintf("%X", tmTx.Hash()))
-		if err != nil {
-			return nil, err
+		if err == nil {
+			txResponses = append(txResponses, txResponse)
 		}
-
-		txResponses[i] = txResponse
 	}
 
 	return txResponses, nil
