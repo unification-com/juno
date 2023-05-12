@@ -17,6 +17,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.8.1
+	github.com/tendermint/tendermint v0.34.24
 	google.golang.org/grpc v1.52.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -211,7 +212,6 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	github.com/tdakkota/asciicheck v0.1.1 // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
-	github.com/tendermint/tendermint v0.34.24 // indirect
 	github.com/tendermint/tm-db v0.6.7 // indirect
 	github.com/tetafro/godot v1.4.11 // indirect
 	github.com/tidwall/btree v1.5.0 // indirect
