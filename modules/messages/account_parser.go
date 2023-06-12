@@ -2,17 +2,19 @@ package messages
 
 import (
 	"fmt"
+	"strings"
 
-	"github.com/gogo/protobuf/proto"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
-	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
@@ -51,10 +53,12 @@ var CosmosMessageAddressesParser = JoinMessageParsers(
 	CrisisMessagesParser,
 	DistributionMessagesParser,
 	EvidenceMessagesParser,
-	GovMessagesParser,
+	GovV1Beta1MessagesParser,
+	GovV1MessageParser,
 	IBCTransferMessagesParser,
 	SlashingMessagesParser,
 	StakingMessagesParser,
+	AuthzMessageParser,
 	DefaultMessagesParser,
 )
 
@@ -137,15 +141,15 @@ func EvidenceMessagesParser(_ codec.Codec, cosmosMsg sdk.Msg) ([]string, error) 
 	return nil, MessageNotSupported(cosmosMsg)
 }
 
-// GovMessagesParser returns the list of all the accounts involved in the given
-// message if it's related to the x/gov module
-func GovMessagesParser(cdc codec.Codec, cosmosMsg sdk.Msg) ([]string, error) {
+// GovV1Beta1MessagesParser returns the list of all the accounts involved in the given
+// message if it's related to the x/gov v1beta1 module
+func GovV1Beta1MessagesParser(cdc codec.Codec, cosmosMsg sdk.Msg) ([]string, error) {
 	switch msg := cosmosMsg.(type) {
 
-	case *govtypesv1beta1.MsgSubmitProposal:
+	case *govv1beta1.MsgSubmitProposal:
 		addresses := []string{msg.Proposer}
 
-		var content govtypesv1beta1.Content
+		var content govv1beta1.Content
 		err := cdc.UnpackAny(msg.Content, &content)
 		if err != nil {
 			return nil, err
@@ -153,16 +157,37 @@ func GovMessagesParser(cdc codec.Codec, cosmosMsg sdk.Msg) ([]string, error) {
 
 		// Get addresses from contents
 		switch content := content.(type) {
+		//nolint:staticcheck // Let's keep this for the time being
 		case *distrtypes.CommunityPoolSpendProposal:
 			addresses = append(addresses, content.Recipient)
 		}
 
 		return addresses, nil
 
-	case *govtypesv1.MsgDeposit:
+	case *govv1beta1.MsgDeposit:
 		return []string{msg.Depositor}, nil
 
-	case *govtypesv1.MsgVote:
+	case *govv1beta1.MsgVote:
+		return []string{msg.Voter}, nil
+
+	}
+
+	return nil, MessageNotSupported(cosmosMsg)
+}
+
+// GovV1MessageParser returns the list of all the accounts involved in the given
+// message if it's related to the x/gov v1 module
+func GovV1MessageParser(cdc codec.Codec, cosmosMsg sdk.Msg) ([]string, error) {
+	switch msg := cosmosMsg.(type) {
+
+	case *govv1.MsgSubmitProposal:
+		addresses := []string{msg.Proposer}
+		return addresses, nil
+
+	case *govv1.MsgDeposit:
+		return []string{msg.Depositor}, nil
+
+	case *govv1.MsgVote:
 		return []string{msg.Voter}, nil
 
 	}
@@ -226,6 +251,99 @@ func StakingMessagesParser(_ codec.Codec, cosmosMsg sdk.Msg) ([]string, error) {
 	case *stakingtypes.MsgUndelegate:
 		return []string{msg.DelegatorAddress, msg.ValidatorAddress}, nil
 
+	}
+
+	return nil, MessageNotSupported(cosmosMsg)
+}
+
+// AuthzMessageParser returns the list of all the accounts involved in the given
+// message if it's related to the x/authz module
+func AuthzMessageParser(c codec.Codec, cosmosMsg sdk.Msg) ([]string, error) {
+	switch msg := cosmosMsg.(type) {
+	case *authztypes.MsgGrant:
+		return []string{msg.Grantee, msg.Granter}, nil
+	case *authztypes.MsgRevoke:
+		return []string{msg.Grantee, msg.Granter}, nil
+	case *authztypes.MsgExec:
+		for _, index := range msg.Msgs {
+			var executedMsg sdk.Msg
+			if err := c.UnpackAny(index, &executedMsg); err != nil {
+				return nil, fmt.Errorf("error while unpacking message from authz: %s", err)
+			}
+
+			switch {
+			case strings.Contains(index.TypeUrl, "bank"):
+				addresses, err := BankMessagesParser(c, executedMsg)
+				if err != nil {
+					return nil, MessageNotSupported(executedMsg)
+				}
+				addresses = append(addresses, msg.Grantee)
+				return addresses, nil
+			case strings.Contains(index.TypeUrl, "crisis"):
+				addresses, err := CrisisMessagesParser(c, executedMsg)
+				if err != nil {
+					return nil, MessageNotSupported(executedMsg)
+				}
+				addresses = append(addresses, msg.Grantee)
+				return addresses, nil
+			case strings.Contains(index.TypeUrl, "distribution"):
+				addresses, err := DistributionMessagesParser(c, executedMsg)
+				if err != nil {
+					return nil, MessageNotSupported(executedMsg)
+				}
+				addresses = append(addresses, msg.Grantee)
+				return addresses, nil
+			case strings.Contains(index.TypeUrl, "evidence"):
+				addresses, err := EvidenceMessagesParser(c, executedMsg)
+				if err != nil {
+					return nil, MessageNotSupported(executedMsg)
+				}
+				addresses = append(addresses, msg.Grantee)
+				return addresses, nil
+			case strings.Contains(index.TypeUrl, "gov.v1beta1"):
+				addresses, err := GovV1Beta1MessagesParser(c, executedMsg)
+				if err != nil {
+					return nil, MessageNotSupported(executedMsg)
+				}
+				addresses = append(addresses, msg.Grantee)
+				return addresses, nil
+			case strings.Contains(index.TypeUrl, "gov.v1."):
+				addresses, err := GovV1MessageParser(c, executedMsg)
+				if err != nil {
+					return nil, MessageNotSupported(executedMsg)
+				}
+				addresses = append(addresses, msg.Grantee)
+				return addresses, nil
+			case strings.Contains(index.TypeUrl, "ibc"):
+				addresses, err := IBCTransferMessagesParser(c, executedMsg)
+				if err != nil {
+					return nil, MessageNotSupported(executedMsg)
+				}
+				addresses = append(addresses, msg.Grantee)
+				return addresses, nil
+			case strings.Contains(index.TypeUrl, "slashing"):
+				addresses, err := SlashingMessagesParser(c, executedMsg)
+				if err != nil {
+					return nil, MessageNotSupported(executedMsg)
+				}
+				addresses = append(addresses, msg.Grantee)
+				return addresses, nil
+			case strings.Contains(index.TypeUrl, "staking"):
+				addresses, err := StakingMessagesParser(c, executedMsg)
+				if err != nil {
+					return nil, MessageNotSupported(executedMsg)
+				}
+				addresses = append(addresses, msg.Grantee)
+				return addresses, nil
+			default:
+				addresses, err := DefaultMessagesParser(c, executedMsg)
+				if err != nil {
+					return nil, MessageNotSupported(executedMsg)
+				}
+				addresses = append(addresses, msg.Grantee)
+				return addresses, nil
+			}
+		}
 	}
 
 	return nil, MessageNotSupported(cosmosMsg)
