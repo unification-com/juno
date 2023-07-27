@@ -29,12 +29,23 @@ func Builder(ctx *database.Context) (database.Database, error) {
 		return nil, err
 	}
 
+	providerDBURI := utils.GetEnvOr(env.ProviderDatabaseURI, ctx.Cfg.ProviderURL)
+
+	providerPostgresDb, err := sqlx.Open("postgres", providerDBURI)
+	if err != nil {
+		return nil, err
+	}
+
 	// Set max open connections
 	postgresDb.SetMaxOpenConns(ctx.Cfg.MaxOpenConnections)
 	postgresDb.SetMaxIdleConns(ctx.Cfg.MaxIdleConnections)
 
+	providerPostgresDb.SetMaxIdleConns(ctx.Cfg.MaxIdleConnections)
+	providerPostgresDb.SetMaxIdleConns(ctx.Cfg.MaxIdleConnections)
+
 	return &Database{
 		SQL:            postgresDb,
+		ProviderSQL:    providerPostgresDb,
 		EncodingConfig: ctx.EncodingConfig,
 		Logger:         ctx.Logger,
 	}, nil
@@ -47,6 +58,7 @@ var _ database.Database = &Database{}
 // for data aggregation and exporting.
 type Database struct {
 	SQL            *sqlx.DB
+	ProviderSQL    *sqlx.DB
 	EncodingConfig *params.EncodingConfig
 	Logger         logging.Logger
 }
@@ -124,6 +136,15 @@ VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING`
 	)
 	return err
 }
+
+// SaveBlock implements database.Database
+// func (db *Database) GetProvidersValidator(consensusAddress string) error {
+// 	sqlStatement := `
+// 	SELECT self_delegate_address FROM validator_info where consensus_address = '%s'`
+
+// 	_, err := db.ProviderSQL.Exec(sqlStatement, consensusAddress)
+// 	return err
+// }
 
 // GetTotalBlocks implements database.Database
 func (db *Database) GetTotalBlocks() int64 {
