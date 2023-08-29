@@ -312,6 +312,8 @@ replace (
 	github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.22.2 //indirect
 	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.37.2
 	github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.0
+	github.com/cosmos/interchain-security/v3 => github.com/Stride-Labs/interchain-security/v3 v3.1.1-0.20230713175550-227e13e60bac
 	github.com/spf13/cast => github.com/Stride-Labs/cast v0.0.3
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
+
 )
