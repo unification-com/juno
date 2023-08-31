@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/cosmos/cosmos-sdk v0.45.12
+	github.com/cosmos/gogoproto v1.4.2
 	github.com/cosmos/ibc-go/v4 v4.3.0
 	github.com/go-co-op/gocron v1.13.0
 	github.com/gogo/protobuf v1.3.3
