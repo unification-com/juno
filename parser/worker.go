@@ -221,14 +221,14 @@ func (w Worker) ExportBlock(
 	// Call the block handlers
 	for _, module := range w.modules {
 		if blockModule, ok := module.(modules.BlockModule); ok {
-			w.logger.Error("***** Processing block **********", "module", module.Name())
+			w.logger.Error("***** Processing block **********", "module", module.Name(), "height", b.Block.Height)
 			start := time.Now()
 			err = blockModule.HandleBlock(b, r, txs, vals)
 			if err != nil {
 				w.logger.BlockError(module, b, err)
 			}
 			elapsed := time.Since(start).Seconds()
-			w.logger.Error("******** Finished Processing ************", "module", module.Name(), "Time", elapsed)
+			w.logger.Error("******** Finished Processing ************", "module", module.Name(), "height", b.Block.Height, "Time", elapsed)
 		}
 	}
 
@@ -331,7 +331,7 @@ func (w Worker) handleMessage(index int, msg sdk.Msg, tx *types.Tx) {
 // An error is returned if the write fails.
 func (w Worker) ExportTxs(txs []*types.Tx) error {
 	// handle all transactions inside the block
-	w.logger.Error("***** Processing transaction **********")
+	w.logger.Error("***** Processing transactions **********", "height", txs[0].Height)
 	start := time.Now()
 	for _, tx := range txs {
 
@@ -370,7 +370,7 @@ func (w Worker) ExportTxs(txs []*types.Tx) error {
 	logging.DbLatestHeight.WithLabelValues("db_latest_height").Set(float64(dbLatestHeight))
 
 	elapsed := time.Since(start).Seconds()
-	w.logger.Error("******** Finished Processing transaction ************", "Time", elapsed)
+	w.logger.Error("******** Finished Processing transaction ************", "height", txs[0].Height, "Time", elapsed)
 
 	return nil
 }
