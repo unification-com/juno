@@ -330,47 +330,49 @@ func (w Worker) handleMessage(index int, msg sdk.Msg, tx *types.Tx) {
 // ExportTxs accepts a slice of transactions and persists then inside the database.
 // An error is returned if the write fails.
 func (w Worker) ExportTxs(txs []*types.Tx) error {
-	// handle all transactions inside the block
-	w.logger.Error("***** Processing transactions **********", "height", txs[0].Height)
-	start := time.Now()
-	for _, tx := range txs {
+	if len(txs) > 0 {
+		// handle all transactions inside the block
+		w.logger.Error("***** Processing transactions **********", "height", txs[0].Height)
+		start := time.Now()
+		for _, tx := range txs {
 
-		// save the transaction
-		err := w.saveTx(tx)
-		if err != nil {
-			return fmt.Errorf("error while storing txs: %s", err)
-		}
-
-		// call the tx handlers
-		w.handleTx(tx)
-
-		// handle all messages contained inside the transaction
-		sdkMsgs := make([]sdk.Msg, len(tx.Body.Messages))
-		for i, msg := range tx.Body.Messages {
-			var stdMsg sdk.Msg
-			err := w.codec.UnpackAny(msg, &stdMsg)
+			// save the transaction
+			err := w.saveTx(tx)
 			if err != nil {
-				return err
+				return fmt.Errorf("error while storing txs: %s", err)
 			}
-			sdkMsgs[i] = stdMsg
+
+			// call the tx handlers
+			w.handleTx(tx)
+
+			// handle all messages contained inside the transaction
+			sdkMsgs := make([]sdk.Msg, len(tx.Body.Messages))
+			for i, msg := range tx.Body.Messages {
+				var stdMsg sdk.Msg
+				err := w.codec.UnpackAny(msg, &stdMsg)
+				if err != nil {
+					return err
+				}
+				sdkMsgs[i] = stdMsg
+			}
+
+			// call the msg handlers
+			for i, sdkMsg := range sdkMsgs {
+				w.handleMessage(i, sdkMsg, tx)
+			}
 		}
+		totalBlocks := w.db.GetTotalBlocks()
+		logging.DbBlockCount.WithLabelValues("total_blocks_in_db").Set(float64(totalBlocks))
 
-		// call the msg handlers
-		for i, sdkMsg := range sdkMsgs {
-			w.handleMessage(i, sdkMsg, tx)
+		dbLatestHeight, err := w.db.GetLastBlockHeight()
+		if err != nil {
+			return err
 		}
-	}
-	totalBlocks := w.db.GetTotalBlocks()
-	logging.DbBlockCount.WithLabelValues("total_blocks_in_db").Set(float64(totalBlocks))
+		logging.DbLatestHeight.WithLabelValues("db_latest_height").Set(float64(dbLatestHeight))
 
-	dbLatestHeight, err := w.db.GetLastBlockHeight()
-	if err != nil {
-		return err
+		elapsed := time.Since(start).Seconds()
+		w.logger.Error("******** Finished Processing transaction ************", "height", txs[0].Height, "Time", elapsed)
 	}
-	logging.DbLatestHeight.WithLabelValues("db_latest_height").Set(float64(dbLatestHeight))
-
-	elapsed := time.Since(start).Seconds()
-	w.logger.Error("******** Finished Processing transaction ************", "height", txs[0].Height, "Time", elapsed)
 
 	return nil
 }
