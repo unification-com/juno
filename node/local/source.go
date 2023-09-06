@@ -8,7 +8,7 @@ package local
 // 	"unsafe"
 
 // 	"github.com/cosmos/cosmos-sdk/codec"
-// 	"github.com/cosmos/cosmos-sdk/simapp/params"
+// 		"cosmossdk.io/simapp/params"
 
 // 	cfg "github.com/cometbft/cometbft/config"
 // 	"github.com/cometbft/cometbft/libs/log"
