@@ -116,7 +116,7 @@ func (w Worker) Process(height int64) error {
 		return fmt.Errorf("failed to get block from node: %s", err)
 	}
 	elapsed := time.Since(start).Seconds()
-	w.logger.Debug("******** processing block ********", "time", elapsed)
+	fmt.Printf("******** processing block ********, time: %v ", elapsed)
 
 	start2 := time.Now()
 	events, err := w.node.BlockResults(height)
@@ -124,7 +124,8 @@ func (w Worker) Process(height int64) error {
 		return fmt.Errorf("failed to get block results from node: %s", err)
 	}
 	elapsed2 := time.Since(start2).Seconds()
-	w.logger.Debug("******** processing block results ********", "time", elapsed2)
+	fmt.Printf("******** processing block results ********, time: %v ", elapsed2)
+
 
 	start3 := time.Now()
 	txs, err := w.node.Txs(block)
@@ -132,7 +133,7 @@ func (w Worker) Process(height int64) error {
 		return fmt.Errorf("failed to get transactions for block: %s", err)
 	}
 	elapsed3 := time.Since(start3).Seconds()
-	w.logger.Debug("******** processing transactions for block ********", "time", elapsed3)
+	fmt.Printf("******** processing transactions for block ********, time: %v ", elapsed3)
 
 	start4 := time.Now()
 	vals, err := w.node.Validators(height)
@@ -140,7 +141,7 @@ func (w Worker) Process(height int64) error {
 		return fmt.Errorf("failed to get validators for block: %s", err)
 	}
 	elapsed4 := time.Since(start4).Seconds()
-	w.logger.Debug("******** processing validators for block ********", "time", elapsed4)
+	fmt.Printf("******** processing transactions for block ********, time: %v ", elapsed4)
 
 	return w.ExportBlock(block, events, txs, vals)
 }
