@@ -141,7 +141,7 @@ func (w Worker) Process(height int64) error {
 		return fmt.Errorf("failed to get validators for block: %s", err)
 	}
 	elapsed4 := time.Since(start4).Seconds()
-	fmt.Printf("******** processing transactions for block ********, time: %v ", elapsed4)
+	fmt.Printf("******** processing validators for block ********, time: %v ", elapsed4)
 
 	return w.ExportBlock(block, events, txs, vals)
 }
