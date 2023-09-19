@@ -2,6 +2,7 @@ package blocks
 
 import (
 	"fmt"
+	"time"
 
 	parsecmdtypes "github.com/forbole/juno/v4/cmd/parse/types"
 	"github.com/forbole/juno/v4/types/utils"
@@ -67,6 +68,8 @@ will be replaced with the data downloaded from the node.
 				endHeight = end
 			}
 
+			testStartTime := time.Now()
+
 			log.Info().Int64("start height", startHeight).Int64("end height", endHeight).
 				Msg("getting blocks and transactions")
 			for k := startHeight; k <= endHeight; k++ {
@@ -80,7 +83,9 @@ will be replaced with the data downloaded from the node.
 					return fmt.Errorf("error while re-fetching block %d: %s", k, err)
 				}
 			}
-
+			elapsed := time.Since(testStartTime).Seconds()
+			log.Info().Int64("end height", endHeight).Float64("elapsed", elapsed).
+				Msg("***** Finished refetching missing blocks **********")
 			return nil
 		},
 	}
