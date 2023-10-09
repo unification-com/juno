@@ -5,8 +5,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/forbole/juno/v4/database"
 	"github.com/forbole/juno/v4/types"
@@ -19,7 +19,7 @@ func HandleMsg(
 ) error {
 
 	// Get the involved addresses
-	addresses, err := parseAddresses(tx)
+	addresses, err := parseAddresses(cdc, msg)
 	if err != nil {
 		return err
 	}
