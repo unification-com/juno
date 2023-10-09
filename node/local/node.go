@@ -37,11 +37,11 @@ import (
 	"path"
 	"time"
 
+	dbm "github.com/cometbft/cometbft-db"
 	constypes "github.com/tendermint/tendermint/consensus/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmnode "github.com/tendermint/tendermint/node"
 	tmctypes "github.com/tendermint/tendermint/rpc/core/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 const (

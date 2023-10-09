@@ -11,8 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 
 	"github.com/cosmos/cosmos-sdk/store"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/log"
@@ -44,7 +44,7 @@ type Source struct {
 
 // NewSource returns a new Source instance
 func NewSource(home string, encodingConfig *params.EncodingConfig) (*Source, error) {
-	levelDB, err := sdk.NewLevelDB("application", path.Join(home, "data"))
+	levelDB, err := db.NewDB("application", db.GoLevelDBBackend, path.Join(home, "data"))
 	if err != nil {
 		return nil, err
 	}
